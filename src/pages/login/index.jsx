@@ -6,19 +6,24 @@ import { Form, Formik } from 'formik'
 import { Link, useNavigate } from 'react-router-dom'
 import LoginInput from '../../components/loginInputs'
 import * as Yup from 'yup'
-
+import RegistrationForm from '../../components/RegistrationForm'
+import { useDispatch } from 'react-redux'
+import { login } from '../../features/auth'
+import { loginApi } from '../../api/auth'
+import toast from 'react-hot-toast'
 const loginValidation = Yup.object({
 	email: Yup.string().required('Email is required').email('Enter a valid email'),
-	password: Yup.string().required('Password is required').min('Password must be at least 6 characters long'),
+	password: Yup.string().required('Password is required').min(6, 'Password must be at least 6 characters long'),
 })
-
 const Login = () => {
+	const dispatch = useDispatch()
+	const navigate = useNavigate()
 	const [loginInfo, setLoginInfo] = useState({
 		email: '',
 		password: '',
 	})
 	const { email, password } = loginInfo
-	const navigate = useNavigate()
+	const [showRegistration, setShowRegistration] = useState(false)
 
 	const handleChange = (e) => {
 		setLoginInfo({ ...loginInfo, [e.target.name]: e.target.value })
@@ -26,14 +31,26 @@ const Login = () => {
 
 	const handleSubmit = (e) => {
 		e.preventDefault()
+		loginApi(loginInfo)
+			.then((response) => {
+				console.log(response.data)
+				toast.success(response.data.message)
+				dispatch(login({ user: response.data.user, token: response.data.token }))
+				navigate('/')
+			})
+			.catch((error) => {
+				console.log(error.response)
+				toast.error(error.response.data.message)
+			})
 	}
 
 	return (
-		<Container fluid style={{ backgroundColor: '#e9fac8', height: '100vh' }}>
+		<Container fluid className='pt-2' style={{ backgroundColor: '#e9fac8', height: '100vh' }}>
 			<Container className='d-flex justify-content-center align-items-center flex-column gap-2'>
 				<img className='mb-3' src={logo} alt='logo' style={{ width: '15rem' }} />
-				<h4 className='text-muted'>
-					<span style={{ color: '#75B118', fontWeight: 'bold' }}>yepSocial</span> helps to connect with your loved ones
+				<h4 className='text-muted text-center' style={{ fontWeight: 200 }}>
+					<span style={{ color: '#75B118', fontWeight: 'normal' }}>yepSocial</span> helps to connect with your loved
+					ones
 				</h4>
 			</Container>
 			<Container
@@ -62,10 +79,14 @@ const Login = () => {
 					)}
 				</Formik>
 				<hr />
-				<Button onClick={() => navigate('/')} className='my-3' style={{ backgroundColor: '#66cd00', border: 'none' }}>
+				<Button
+					onClick={() => setShowRegistration(true)}
+					className='my-3'
+					style={{ backgroundColor: '#66cd00', border: 'none' }}>
 					Register
 				</Button>
 			</Container>
+			<RegistrationForm show={showRegistration} onHide={() => setShowRegistration(false)} />
 		</Container>
 	)
 }
