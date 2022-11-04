@@ -48,6 +48,9 @@ const RegistrationForm = ({ setShowRegistration }) => {
 			.catch((error) => {
 				toast.error(error.response.data.message)
 				console.log(error.response.data)
+				setTimeout(() => {
+					setShowRegistration(false)
+				}, 2500)
 			})
 	}
 	return (
