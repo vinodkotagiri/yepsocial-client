@@ -1,42 +1,48 @@
-/* eslint-disable react-hooks/exhaustive-deps */
-import React, { Fragment, useEffect } from 'react'
-import { Routes, Route, Navigate } from 'react-router-dom'
-import Home from './pages/page.home'
-import Login from './pages/page.login'
-import Profile from './pages/page.profile'
-import Activate from './pages/page.activate'
-import Topbar from './components/component.topbar'
-import { Toaster } from 'react-hot-toast'
-import { useDispatch, useSelector } from 'react-redux'
-import { login } from './features/auth/authSlice'
+import React from 'react'
+import { createBrowserRouter, Navigate, RouterProvider } from 'react-router-dom'
+import Layout from './components/Layout'
+import Login from './pages/Login'
+import Register from './pages/Register'
+import Home from './pages/Home'
+import Profile from './pages/Profile'
 const App = () => {
-	const dispatch = useDispatch()
-	const auth = useSelector((state) => state.auth.isLoggedIn)
-
-	useEffect(() => {
-		if (localStorage.getItem('auth')) {
-			const auth = JSON.parse(localStorage.getItem('auth'))
-			dispatch(login(auth))
-		}
-	}, [])
+	const isLoggedIn = true
+	const ProtectedRoute = ({ children }) => {
+		if (!isLoggedIn) return <Navigate to='/login' />
+		return children
+	}
+	const router = createBrowserRouter([
+		{
+			path: '/',
+			element: (
+				<ProtectedRoute>
+					<Layout />
+				</ProtectedRoute>
+			),
+			children: [
+				{
+					path: '/',
+					element: <Home />,
+				},
+				{
+					path: '/profile/:id',
+					element: <Profile />,
+				},
+			],
+		},
+		{
+			path: '/register',
+			element: <Register />,
+		},
+		{
+			path: '/login',
+			element: <Login />,
+		},
+	])
 	return (
-		<Fragment>
-			{!auth ? (
-				<Routes>
-					<Route path='/' element={<Login />} />
-					<Route path='/activate/:token' element={<Activate />} />
-				</Routes>
-			) : (
-				<Routes>
-					<Route path='/' element={<Topbar />}>
-						<Route path='*' element={<Navigate to='/' />} />
-						<Route index element={<Home />} />
-						<Route path='/profile' element={<Profile />} />
-					</Route>
-				</Routes>
-			)}
-			<Toaster position='top-right' reverseOrder={false} />
-		</Fragment>
+		<div>
+			<RouterProvider router={router} />
+		</div>
 	)
 }
 
